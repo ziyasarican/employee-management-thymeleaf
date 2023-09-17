@@ -2,6 +2,8 @@ package com.thymeleaf.employeemanagementexample;
 
 
 import com.thymeleaf.employeemanagementexample.entity.Employee;
+import com.thymeleaf.employeemanagementexample.errorHandler.DatabaseOperationException;
+import com.thymeleaf.employeemanagementexample.errorHandler.EmployeeNotFoundException;
 import com.thymeleaf.employeemanagementexample.repository.EmployeeRepository;
 import com.thymeleaf.employeemanagementexample.service.EmployeeServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +14,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -71,6 +74,33 @@ public class EmployeeServiceImplTest {
         RuntimeException exception = assertThrows(RuntimeException.class, () -> employeeService.save(catchEmployee));
         assertEquals("An error occurred while saving employee data.", exception.getMessage());
         verify(employeeRepository).save(catchEmployee);
+    }
+
+    @Test
+    void testGetById(){
+        Employee testEmployee = new Employee(1L, "ziya", "srcn", "01", "MIS");
+
+        when(employeeRepository.findById(testEmployee.getId())).thenReturn(Optional.of(testEmployee));
+        assertEquals(testEmployee.getId(), employeeService.getById(testEmployee.getId()).get().getId());
+
+        Mockito.reset(employeeRepository);
+        Employee test2Employee = new Employee(1L, "ziya", "srcn", "01", "MIS");
+        when(employeeRepository.findById(test2Employee.getId())).thenThrow(new RuntimeException("An error occurred while fetching employee data by ID."));
+        assertThrows(DatabaseOperationException.class, () -> employeeService.getById(test2Employee.getId()));
+    }
+
+    @Test
+    void testDeleteById(){
+        Long employeeId = 1L;
+
+        when(employeeRepository.existsById(employeeId)).thenReturn(true);
+        employeeService.deleteById(employeeId);
+        verify(employeeRepository, times(1)).deleteById(employeeId);
+
+        Mockito.reset(employeeRepository);
+        when(employeeRepository.existsById(employeeId)).thenReturn(false);
+        assertThrows(DatabaseOperationException.class, () -> employeeService.deleteById(employeeId));
+
 
     }
 }

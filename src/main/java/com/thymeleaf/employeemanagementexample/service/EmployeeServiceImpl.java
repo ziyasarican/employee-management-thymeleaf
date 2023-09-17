@@ -1,6 +1,5 @@
 package com.thymeleaf.employeemanagementexample.service;
 
-import com.thymeleaf.employeemanagementexample.controller.EmployeeController;
 import com.thymeleaf.employeemanagementexample.entity.Employee;
 import com.thymeleaf.employeemanagementexample.errorHandler.DatabaseOperationException;
 import com.thymeleaf.employeemanagementexample.errorHandler.EmployeeNotFoundException;
@@ -47,13 +46,11 @@ public class EmployeeServiceImpl implements EmployeeService{
     }
 
     @Override
-    public Employee getById(Long id) {
+    public Optional<Employee> getById(Long id) {
         logger.info("Getting employee by ID: " + id);
         try{
             Optional<Employee> optionalEmployee = employeeRepository.findById(id);
-            return optionalEmployee.orElseThrow(() ->
-                    new EmployeeNotFoundException("Employee not found with the ID: " + id)
-            );
+            return optionalEmployee;
         }catch (Exception e){
             throw new DatabaseOperationException("An error occurred while fetching employee data by ID.", e);
         }

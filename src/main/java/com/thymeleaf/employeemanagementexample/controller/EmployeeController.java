@@ -9,6 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 
 @Controller
 public class EmployeeController {
@@ -44,7 +46,7 @@ public class EmployeeController {
 
     @GetMapping("update/{id}")
     public String update(@PathVariable(value = "id") long id, Model model){
-        Employee employee = employeeService.getById(id);
+        Optional<Employee> employee = employeeService.getById(id);
         model.addAttribute("employee", employee);
         logger.info("Update employee page accessed for employee with ID: " + id);
         return "update";
