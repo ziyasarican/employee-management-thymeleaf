@@ -2,6 +2,8 @@ package com.thymeleaf.employeemanagementexample;
 
 
 import com.thymeleaf.employeemanagementexample.entity.Employee;
+import com.thymeleaf.employeemanagementexample.errorHandler.DatabaseOperationException;
+import com.thymeleaf.employeemanagementexample.errorHandler.EmployeeNotFoundException;
 import com.thymeleaf.employeemanagementexample.repository.EmployeeRepository;
 import com.thymeleaf.employeemanagementexample.service.EmployeeServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,9 +14,9 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class EmployeeServiceImplTest {
@@ -25,7 +27,7 @@ public class EmployeeServiceImplTest {
     private EmployeeRepository employeeRepository;;
 
     @BeforeEach
-    void setUp() {
+    void setUp(){
         MockitoAnnotations.initMocks(this);
     }
 
@@ -52,7 +54,7 @@ public class EmployeeServiceImplTest {
         // if
         Employee nullEmployee = null;
 
-        doThrow(new IllegalArgumentException("Employee cannot be null")).when(employeeRepository).save(nullEmployee);
+        Mockito.doThrow(new IllegalArgumentException("Employee cannot be null")).when(employeeRepository).save(nullEmployee);
         assertThrows(IllegalArgumentException.class, () -> employeeService.save(nullEmployee));
 
         //try
@@ -71,6 +73,39 @@ public class EmployeeServiceImplTest {
         RuntimeException exception = assertThrows(RuntimeException.class, () -> employeeService.save(catchEmployee));
         assertEquals("An error occurred while saving employee data.", exception.getMessage());
         verify(employeeRepository).save(catchEmployee);
-
     }
+
+    @Test
+    void testGetById(){
+        Employee employee = new Employee(1L, "ziya", "ziya@gmail.com", "1", "MIS");
+
+        when(employeeRepository.findById(employee.getId())).thenReturn(Optional.of(employee));
+
+        Employee result = employeeService.getById(1L);
+
+        assertNotNull(result);
+        assertEquals(employee.getId(), result.getId());
+        assertThrows(DatabaseOperationException.class, () -> {
+            employeeService.getById(999L);
+        });
+    }
+
+    @Test
+    void testDeleteById(){
+        Employee employee = new Employee(1L, "ziya", "ziya@gmail.com", "1", "MIS");
+
+        when(employeeRepository.existsById(employee.getId())).thenReturn(true);
+
+        //if
+        employeeService.deleteById(employee.getId());
+        verify(employeeRepository).deleteById(employee.getId());
+
+        //catch
+        Mockito.reset(employeeRepository);
+        when(employeeRepository.existsById(999L)).thenReturn(false);
+        assertThrows(DatabaseOperationException.class, () ->{
+            employeeService.deleteById(999L);
+        });
+    }
+
 }

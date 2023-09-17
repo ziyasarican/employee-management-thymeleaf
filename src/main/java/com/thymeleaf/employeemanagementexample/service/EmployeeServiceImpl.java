@@ -45,7 +45,6 @@ public class EmployeeServiceImpl implements EmployeeService{
             throw new DatabaseOperationException("An error occurred while saving employee data.", e);
         }
     }
-
     @Override
     public Employee getById(Long id) {
         logger.info("Getting employee by ID: " + id);
